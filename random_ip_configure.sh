@@ -2,7 +2,21 @@
 
 # Dải IP để chọn ngẫu nhiên (ví dụ: 192.168.1.0/24)
 SUBNET="192.168.1"
-RANDOM_IP="$SUBNET.$((RANDOM % 254 + 1))"
+GATEWAY="${SUBNET}.1"
+
+# Hàm kiểm tra xem IP có đang được sử dụng hay không
+function is_ip_in_use {
+    ping -c 1 -W 1 $1 > /dev/null 2>&1
+    return $?
+}
+
+# Tìm một địa chỉ IP ngẫu nhiên không sử dụng
+while true; do
+    RANDOM_IP="$SUBNET.$((RANDOM % 254 + 1))"
+    if ! is_ip_in_use $RANDOM_IP; then
+        break
+    fi
+done
 
 # Lấy địa chỉ MAC hiện tại của ens3
 MAC_ADDRESS=$(ip link show ens3 | awk '/ether/ {print $2}')
@@ -18,7 +32,7 @@ network:
       dhcp4: false
       routes:
         - to: default
-          via: ${SUBNET}.1
+          via: ${GATEWAY}
       nameservers:
         addresses:
           - 8.8.8.8
