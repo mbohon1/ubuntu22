@@ -16,7 +16,9 @@ network:
       addresses:
         - ${RANDOM_IP}/24
       dhcp4: false
-      gateway4: ${SUBNET}.1
+      routes:
+        - to: default
+          via: ${SUBNET}.1
       nameservers:
         addresses:
           - 8.8.8.8
