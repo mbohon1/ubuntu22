@@ -31,6 +31,9 @@ echo "Selected IP: ${RANDOM_IP}"
 MAC_ADDRESS=$(ip link show ens3 | awk '/ether/ {print $2}')
 echo "MAC Address: ${MAC_ADDRESS}"
 
+# Tạo bản sao lưu của cấu hình netplan hiện tại
+cp /etc/netplan/50-cloud-init.yaml /etc/netplan/50-cloud-init.yaml.bak
+
 # Tạo tệp cấu hình netplan mới
 cat <<EOF > /etc/netplan/50-cloud-init-new.yaml
 network:
@@ -68,8 +71,8 @@ if ping -c 1 ${GATEWAY} &> /dev/null && ping -c 1 8.8.8.8 &> /dev/null; then
     echo "Network configuration applied successfully with IP: ${RANDOM_IP}"
 else
     echo "Failed to apply new network configuration. Reverting to original configuration."
-    rm /etc/netplan/50-cloud-init-new.yaml
-    netplan apply --config-file=/etc/netplan/50-cloud-init.yaml.bak || netplan apply --config-file=/etc/netplan/50-cloud-init.yaml.old 
+    mv /etc/netplan/50-cloud-init.yaml.bak /etc/netplan/50-cloud-init.yaml
+    netplan apply --config-file=/etc/netplan/50-cloud-init.yaml || reboot # Reboot if necessary to restore network settings.
 fi
 
 echo "Script execution completed."
