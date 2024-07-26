@@ -1,9 +1,12 @@
 #!/bin/bash
 
-# Dải IP để chọn ngẫu nhiên (ví dụ: 10.0.0.0/24)
-SUBNET="10.0.0"
-GATEWAY="10.0.0.1"
+# Lấy thông tin mạng hiện tại
+CURRENT_IP_INFO=$(ip addr show ens3 | grep 'inet ' | awk '{print $2}')
+CURRENT_IP=${CURRENT_IP_INFO%/*}
+SUBNET=$(echo $CURRENT_IP | cut -d. -f1-3)
+GATEWAY=$(ip route | grep default | awk '{print $3}')
 
+echo "Current IP: ${CURRENT_IP}"
 echo "Subnet: ${SUBNET}"
 echo "Gateway: ${GATEWAY}"
 
