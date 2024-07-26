@@ -4,6 +4,9 @@
 SUBNET="192.168.1"
 GATEWAY="${SUBNET}.1"
 
+echo "Subnet: ${SUBNET}"
+echo "Gateway: ${GATEWAY}"
+
 # Hàm kiểm tra xem IP có đang được sử dụng hay không
 function is_ip_in_use {
     ping -c 1 -W 1 $1 > /dev/null 2>&1
@@ -13,13 +16,17 @@ function is_ip_in_use {
 # Tìm một địa chỉ IP ngẫu nhiên không sử dụng
 while true; do
     RANDOM_IP="$SUBNET.$((RANDOM % 254 + 1))"
+    echo "Testing IP: ${RANDOM_IP}"
     if ! is_ip_in_use $RANDOM_IP; then
         break
     fi
 done
 
+echo "Selected IP: ${RANDOM_IP}"
+
 # Lấy địa chỉ MAC hiện tại của ens3
 MAC_ADDRESS=$(ip link show ens3 | awk '/ether/ {print $2}')
+echo "MAC Address: ${MAC_ADDRESS}"
 
 # Tạo tệp cấu hình netplan mới
 cat <<EOF > /etc/netplan/50-cloud-init-new.yaml
@@ -42,6 +49,8 @@ network:
       set-name: ens3
 EOF
 
+echo "New netplan configuration created."
+
 # Áp dụng cấu hình netplan mới và kiểm tra kết nối mạng trong 10 giây
 netplan apply --config-file=/etc/netplan/50-cloud-init-new.yaml
 
@@ -59,3 +68,5 @@ else
     rm /etc/netplan/50-cloud-init-new.yaml
     netplan apply --config-file=/etc/netplan/50-cloud-init.yaml.bak
 fi
+
+echo "Script execution completed."
