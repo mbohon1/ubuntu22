@@ -21,8 +21,8 @@ done
 # Lấy địa chỉ MAC hiện tại của ens3
 MAC_ADDRESS=$(ip link show ens3 | awk '/ether/ {print $2}')
 
-# Cấu hình netplan với địa chỉ IP ngẫu nhiên
-cat <<EOF > /etc/netplan/50-cloud-init.yaml
+# Tạo tệp cấu hình netplan mới
+cat <<EOF > /etc/netplan/50-cloud-init-new.yaml
 network:
   version: 2
   ethernets:
@@ -42,7 +42,15 @@ network:
       set-name: ens3
 EOF
 
-# Áp dụng cấu hình netplan
-netplan apply
+# Áp dụng cấu hình netplan mới và kiểm tra kết nối mạng
+netplan try --config-file=/etc/netplan/50-cloud-init-new.yaml
 
-echo "Network configuration applied successfully with IP: ${RANDOM_IP}"
+if [ $? -eq 0 ]; then
+    mv /etc/netplan/50-cloud-init-new.yaml /etc/netplan/50-cloud-init.yaml
+    netplan apply
+    echo "Network configuration applied successfully with IP: ${RANDOM_IP}"
+else
+    echo "Failed to apply new network configuration. Reverting to original configuration."
+    rm /etc/netplan/50-cloud-init-new.yaml
+    netplan apply
+fi
