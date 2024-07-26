@@ -4,6 +4,9 @@
 SUBNET="192.168.1"
 RANDOM_IP="$SUBNET.$((RANDOM % 254 + 1))"
 
+# Lấy địa chỉ MAC hiện tại của ens3
+MAC_ADDRESS=$(ip link show ens3 | awk '/ether/ {print $2}')
+
 # Cấu hình netplan với địa chỉ IP ngẫu nhiên
 cat <<EOF > /etc/netplan/50-cloud-init.yaml
 network:
@@ -19,7 +22,7 @@ network:
           - 8.8.8.8
           - 8.8.4.4
       match:
-        macaddress: fa:16:3e:af:61:43
+        macaddress: ${MAC_ADDRESS}
       set-name: ens3
 EOF
 
