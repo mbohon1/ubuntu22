@@ -42,15 +42,20 @@ network:
       set-name: ens3
 EOF
 
-# Áp dụng cấu hình netplan mới và kiểm tra kết nối mạng
-netplan try --config-file=/etc/netplan/50-cloud-init-new.yaml
+# Áp dụng cấu hình netplan mới và kiểm tra kết nối mạng trong 10 giây
+netplan apply --config-file=/etc/netplan/50-cloud-init-new.yaml
 
-if [ $? -eq 0 ]; then
+echo "Testing new network configuration for 10 seconds..."
+sleep 10
+
+# Kiểm tra kết nối mạng bằng cách ping gateway
+if ping -c 1 ${GATEWAY} &> /dev/null; then
+    echo "New network configuration is working. Applying permanently."
     mv /etc/netplan/50-cloud-init-new.yaml /etc/netplan/50-cloud-init.yaml
     netplan apply
     echo "Network configuration applied successfully with IP: ${RANDOM_IP}"
 else
     echo "Failed to apply new network configuration. Reverting to original configuration."
     rm /etc/netplan/50-cloud-init-new.yaml
-    netplan apply
+    netplan apply --config-file=/etc/netplan/50-cloud-init.yaml.bak
 fi
