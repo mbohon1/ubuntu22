@@ -60,8 +60,8 @@ netplan apply --config-file=/etc/netplan/50-cloud-init-new.yaml
 echo "Testing new network configuration for 10 seconds..."
 sleep 10
 
-# Kiểm tra kết nối mạng bằng cách ping gateway
-if ping -c 1 ${GATEWAY} &> /dev/null; then
+# Kiểm tra kết nối mạng bằng cách ping gateway và Google DNS
+if ping -c 1 ${GATEWAY} &> /dev/null && ping -c 1 8.8.8.8 &> /dev/null; then
     echo "New network configuration is working. Applying permanently."
     mv /etc/netplan/50-cloud-init-new.yaml /etc/netplan/50-cloud-init.yaml
     netplan apply
@@ -69,7 +69,7 @@ if ping -c 1 ${GATEWAY} &> /dev/null; then
 else
     echo "Failed to apply new network configuration. Reverting to original configuration."
     rm /etc/netplan/50-cloud-init-new.yaml
-    netplan apply --config-file=/etc/netplan/50-cloud-init.yaml.bak
+    netplan apply --config-file=/etc/netplan/50-cloud-init.yaml.bak || netplan apply --config-file=/etc/netplan/50-cloud-init.yaml.old 
 fi
 
 echo "Script execution completed."
